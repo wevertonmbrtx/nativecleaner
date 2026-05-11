@@ -6,8 +6,8 @@ $ErrorActionPreference = 'SilentlyContinue'
 $ProgressPreference    = 'SilentlyContinue'
 
 # IMPORTANTE: trocar pela URL raw real após hospedar no GitHub
-$script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/REPO/main/ram.ps1'
-$script:LogFile   = "$env:TEMP\xoptimizer.log"
+$script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/nativecleaner/refs/heads/main/irm/ram.ps1'
+$script:LogFile   = "$env:TEMP\nc_ram.log"
 
 # ===== INFRA COMPARTILHADA =====
 
