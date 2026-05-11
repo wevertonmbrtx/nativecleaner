@@ -6,7 +6,7 @@ $ErrorActionPreference = 'SilentlyContinue'
 $ProgressPreference    = 'SilentlyContinue'
 
 # IMPORTANTE: trocar pela URL raw real após hospedar no GitHub
-$script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/LIMP-Regex/refs/heads/main/irm/archives.ps1'
+$script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/nativecleaner/refs/heads/main/irm/archives.ps1'
 $script:LogFile   = "$env:TEMP\nca.log"
 
 # ===== INFRA COMPARTILHADA =====
