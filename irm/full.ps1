@@ -1,13 +1,13 @@
 # full.ps1 — Limpeza completa: arquivos + navegadores + RAM
-# Uso: iex (irm https://bit.ly/SEU-LINK)
-# Log: %TEMP%\xoptimizer.log
+# Uso: irm bit.ly/wgitncf | iex
+# Log: %TEMP%\ncf.log
 
 $ErrorActionPreference = 'SilentlyContinue'
 $ProgressPreference    = 'SilentlyContinue'
 
 # IMPORTANTE: trocar pela URL raw real após hospedar no GitHub
-$script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/REPO/main/full.ps1'
-$script:LogFile   = "$env:TEMP\xoptimizer.log"
+$script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/nativecleaner/refs/heads/main/irm/full.ps1'
+$script:LogFile   = "$env:TEMP\ncf.log"
 
 # ===== INFRA COMPARTILHADA =====
 
