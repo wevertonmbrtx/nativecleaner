@@ -1,13 +1,13 @@
 # ram.ps1 — Limpeza agressiva de RAM (Working Sets, Standby List, FS Cache) — requer admin
-# Uso: iex (irm https://bit.ly/SEU-LINK)
-# Log: %TEMP%\xoptimizer.log
+# Uso: irm bit.ly/wgitncr | iex
+# Log: %TEMP%\ncr.log
 
 $ErrorActionPreference = 'SilentlyContinue'
 $ProgressPreference    = 'SilentlyContinue'
 
 # IMPORTANTE: trocar pela URL raw real após hospedar no GitHub
 $script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/nativecleaner/refs/heads/main/irm/ram.ps1'
-$script:LogFile   = "$env:TEMP\nc_ram.log"
+$script:LogFile   = "$env:TEMP\ncr.log"
 
 # ===== INFRA COMPARTILHADA =====
 
@@ -38,7 +38,7 @@ function Invoke-SelfElevation {
     if (Get-IsAdmin) { return $true }
     Write-Log 'Elevação necessária. Re-baixando script para temp...' 'i'
 
-    $tempScript = "$env:TEMP\xopt_$(Get-Random).ps1"
+    $tempScript = "$env:TEMP\nc_$(Get-Random).ps1"
     $elevated = $false
 
     try {
