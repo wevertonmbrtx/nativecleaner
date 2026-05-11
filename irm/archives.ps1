@@ -1,13 +1,13 @@
-# files.ps1 — Limpeza de arquivos, caches do sistema e navegadores
-# Uso: iex (irm https://bit.ly/SEU-LINK)
-# Log: %TEMP%\xoptimizer.log
+# archives.ps1 — Limpeza de arquivos, caches do sistema e navegadores
+# Uso: irm bit.ly/wgitnca | iex
+# Log: %TEMP%\nca.log
 
 $ErrorActionPreference = 'SilentlyContinue'
 $ProgressPreference    = 'SilentlyContinue'
 
 # IMPORTANTE: trocar pela URL raw real após hospedar no GitHub
-$script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/LIMP-Regex/refs/heads/main/irm/files.ps1'
-$script:LogFile   = "$env:TEMP\files_cleaner.log"
+$script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/LIMP-Regex/refs/heads/main/irm/archives.ps1'
+$script:LogFile   = "$env:TEMP\nca.log"
 
 # ===== INFRA COMPARTILHADA =====
 
