@@ -5,7 +5,6 @@
 $ErrorActionPreference = 'SilentlyContinue'
 $ProgressPreference    = 'SilentlyContinue'
 
-# IMPORTANTE: trocar pela URL raw real após hospedar no GitHub
 $script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/nativecleaner/refs/heads/main/irm/full.ps1'
 $script:LogFile   = "$env:TEMP\ncf.log"
 
@@ -156,7 +155,8 @@ function Invoke-SystemCleanup {
     $roaming  = $env:APPDATA
     $local    = $env:LOCALAPPDATA
     $localLow = "$env:USERPROFILE\AppData\LocalLow"
-    $win      = $env:windir
+    $sysd     = $env:SYSTEMDRIVE
+    $win      = $env:SYSTEMROOT
     $temp     = $env:TEMP
 
     $targets = @()
@@ -180,9 +180,9 @@ function Invoke-SystemCleanup {
                      'WebCache', 'ActionCenterCache', 'AppCache',
                      'WER\ReportQueue', 'WER\ReportArchive', 'WER\Temp')
         foreach ($p in $winSubs) {
-            $targets += [PSCustomObject]@{ Path = "$win\$p"; Name = "Windows $p" }
+            $targets += [PSCustomObject]@{ Path = "$sysd\$p"; Name = "Windows $p" }
         }
-        $targets += [PSCustomObject]@{ Path = "$env:SystemRoot\Prefetch"; Name = 'Windows Prefetch' }
+        $targets += [PSCustomObject]@{ Path = "$win\Prefetch"; Name = 'Windows Prefetch' }
     }
 
     $msPaths = @('GraphicsCache', 'FontCache', 'IdentityCache', 'Package Cache',
