@@ -79,7 +79,7 @@ function Invoke-SelfElevation {
 # ===== LIMPEZA DE ARQUIVOS =====
 
 function Close-Apps {
-    $targetApps = @('chrome', 'msedge', 'msedgewebview', 'msedgewebview2', 'opera', 'brave',
+    $targetApps = @('chrome', 'msedge', 'msedgewebview2', 'opera', 'brave',
                     'firefox', 'discord', 'teams', 'ms-teams', 'code', 'blitz')
     foreach ($procName in $targetApps) {
         $procs = Get-Process -Name $procName -ErrorAction SilentlyContinue
@@ -109,6 +109,7 @@ function Invoke-StoreCacheReset {
         $job = Start-Job { Start-Process 'wsreset.exe' -WindowStyle Hidden -Wait }
         if (-not (Wait-Job $job -Timeout 15)) {
             Stop-Job $job
+            Remove-Job $job -Force
             Stop-Process -Name 'wsreset' -Force -ErrorAction SilentlyContinue
             Write-Log 'MS Store resetada (timeout)' 'o'
         } else {
@@ -535,6 +536,5 @@ if ($isAdmin) {
 $totalDisk = $sys.TotalFreedBytes + $brw.TotalFreedBytes
 $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds, 2)
 Write-Log "Disco liberado: $(Format-Size -Bytes $totalDisk)" 'o'
-if ($isAdmin) { Write-Log "RAM recuperada: $(Format-Size -Bytes $ramFreed)" 'o' }
 Write-Log "Tempo total: ${elapsed}s" 'i'
 Write-Log '===== full.ps1 finalizado =====' 'i'
