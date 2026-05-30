@@ -287,6 +287,36 @@ function Invoke-BrowserCleanup {
     return $result
 }
 
+# ===== POWER PLAN =====
+
+function Invoke-UltimatePerformance {
+    $sourceGuid = 'e9a42b02-d5df-448d-aa00-03f14749eb61'
+
+    $active = powercfg /getactivescheme 2>$null
+    if ($active -match 'Ultimate Performance') {
+        Write-Log 'Ultimate Performance já está ativo' 'i'
+        return
+    }
+
+    $list = powercfg /list 2>$null
+    $existing = $list | Where-Object { $_ -match 'Ultimate Performance' }
+    if ($existing) {
+        if ($existing -match '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})') {
+            powercfg /setactive $Matches[1] 2>$null
+            Write-Log 'Ultimate Performance ativado (plano já existia)' 'o'
+        }
+        return
+    }
+
+    $out = powercfg /duplicatescheme $sourceGuid 2>$null
+    if ($out -match '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})') {
+        powercfg /setactive $Matches[1] 2>$null
+        Write-Log 'Ultimate Performance criado e ativado' 'o'
+    } else {
+        Write-Log 'Falha ao criar plano Ultimate Performance' 'e'
+    }
+}
+
 # ===== RAM =====
 
 function Invoke-RamCleanup {
@@ -573,6 +603,7 @@ $brw = Invoke-BrowserCleanup
 
 $ramFreed = 0
 if ($isAdmin) {
+    Invoke-UltimatePerformance
     $ram = Invoke-RamCleanup
     if ($ram.ErrorOccurred) {
         Write-Log 'Falha na limpeza nativa de RAM. Tentando fallback RAMMap...' 'w'
