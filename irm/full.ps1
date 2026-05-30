@@ -291,30 +291,24 @@ function Invoke-BrowserCleanup {
 
 function Invoke-UltimatePerformance {
     $sourceGuid = 'e9a42b02-d5df-448d-aa00-03f14749eb61'
+    $targetGuid = 'e9a42b02-d5df-448d-aa00-03f14749eb62'
 
     $active = powercfg /getactivescheme 2>$null
-    if ($active -match 'Ultimate Performance') {
-        Write-Log 'Ultimate Performance já está ativo' 'i'
+    if ($active -match $targetGuid) {
+        Write-Log 'Desempenho Máximo já está ativo' 'i'
         return
     }
 
     $list = powercfg /list 2>$null
-    $existing = $list | Where-Object { $_ -match 'Ultimate Performance' }
-    if ($existing) {
-        if ($existing -match '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})') {
-            powercfg /setactive $Matches[1] 2>$null
-            Write-Log 'Ultimate Performance ativado (plano já existia)' 'o'
-        }
+    if ($list -match $targetGuid) {
+        powercfg /setactive $targetGuid 2>$null
+        Write-Log 'Desempenho Máximo ativado (plano já existia)' 'o'
         return
     }
 
-    $out = powercfg /duplicatescheme $sourceGuid 2>$null
-    if ($out -match '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})') {
-        powercfg /setactive $Matches[1] 2>$null
-        Write-Log 'Ultimate Performance criado e ativado' 'o'
-    } else {
-        Write-Log 'Falha ao criar plano Ultimate Performance' 'e'
-    }
+    powercfg /duplicatescheme $sourceGuid $targetGuid 2>$null
+    powercfg /setactive $targetGuid 2>$null
+    Write-Log 'Desempenho Máximo criado e ativado' 'o'
 }
 
 # ===== RAM =====
