@@ -184,6 +184,7 @@ function Invoke-SystemCleanup {
             $targets += [PSCustomObject]@{ Path = "$sysd\$p"; Name = "Windows $p" }
         }
         $targets += [PSCustomObject]@{ Path = "$win\Prefetch"; Name = 'Windows Prefetch' }
+        $targets += [PSCustomObject]@{ Path = "$win\Temp";    Name = 'Windows Temp' }
     }
 
     $msPaths = @('GraphicsCache', 'FontCache', 'IdentityCache', 'Package Cache',
@@ -307,7 +308,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
-using System.ComponentModel;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct SYSTEM_CACHE_INFORMATION {
@@ -326,6 +326,15 @@ public struct SYSTEM_CACHE_INFORMATION_64 {
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct TokPriv1Luid { public int Count; public long Luid; public int Attr; }
 
+[StructLayout(LayoutKind.Sequential)]
+public struct MEMORYSTATUSEX {
+    public uint dwLength; public uint dwMemoryLoad;
+    public ulong ullTotalPhys; public ulong ullAvailPhys;
+    public ulong ullTotalPageFile; public ulong ullAvailPageFile;
+    public ulong ullTotalVirtual; public ulong ullAvailVirtual;
+    public ulong ullAvailExtendedVirtual;
+}
+
 public class NativeRamTools {
     const int SE_PRIVILEGE_ENABLED = 2;
 
@@ -341,6 +350,10 @@ public class NativeRamTools {
     [DllImport("psapi.dll")]
     public static extern int EmptyWorkingSet(IntPtr hwProc);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
+
     public static bool SetPrivilege(string name) {
         try {
             using (WindowsIdentity id = WindowsIdentity.GetCurrent(TokenAccessLevels.Query | TokenAccessLevels.AdjustPrivileges)) {
@@ -350,6 +363,13 @@ public class NativeRamTools {
                 return true;
             }
         } catch { return false; }
+    }
+
+    public static long GetAvailablePhysicalMemory() {
+        MEMORYSTATUSEX ms = new MEMORYSTATUSEX();
+        ms.dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
+        if (GlobalMemoryStatusEx(ref ms)) return (long)ms.ullAvailPhys;
+        return -1;
     }
 
     public static int[] EmptyAllWorkingSets() {
@@ -363,12 +383,34 @@ public class NativeRamTools {
         return new int[] { trimmed, skipped };
     }
 
-    public static uint EmptyWorkingSetsKernel() {
-        if (!SetPrivilege("SeProfileSingleProcessPrivilege")) return uint.MaxValue;
-        int cmd = 2;
+    static uint MemoryListCommand(int cmd) {
         GCHandle h = GCHandle.Alloc(cmd, GCHandleType.Pinned);
         try   { return NtSetSystemInformation(0x50, h.AddrOfPinnedObject(), sizeof(int)); }
         finally { h.Free(); }
+    }
+
+    // cmd=1: esvazia working sets do kernel
+    public static uint EmptyKernelWorkingSets() {
+        if (!SetPrivilege("SeProfileSingleProcessPrivilege")) return uint.MaxValue;
+        return MemoryListCommand(1);
+    }
+
+    // cmd=2: transfere páginas modificadas para o pagefile, liberando RAM física
+    public static uint FlushModifiedList() {
+        if (!SetPrivilege("SeProfileSingleProcessPrivilege")) return uint.MaxValue;
+        return MemoryListCommand(2);
+    }
+
+    // cmd=3: purga a standby list completa (páginas prontas para reutilização)
+    public static uint PurgeStandbyList() {
+        if (!SetPrivilege("SeProfileSingleProcessPrivilege")) return uint.MaxValue;
+        return MemoryListCommand(3);
+    }
+
+    // cmd=4: purga apenas a standby list de baixa prioridade
+    public static uint PurgeLowPriorityStandbyList() {
+        if (!SetPrivilege("SeProfileSingleProcessPrivilege")) return uint.MaxValue;
+        return MemoryListCommand(4);
     }
 
     public static uint ClearFileSystemCache() {
@@ -395,11 +437,11 @@ public class NativeRamTools {
         finally { h.Free(); }
     }
 
-    public static uint PurgeStandbyList() {
-        if (!SetPrivilege("SeProfileSingleProcessPrivilege")) return uint.MaxValue;
-        int cmd = 4;
-        GCHandle h = GCHandle.Alloc(cmd, GCHandleType.Pinned);
-        try   { return NtSetSystemInformation(0x50, h.AddrOfPinnedObject(), sizeof(int)); }
+    // Combina páginas físicas idênticas (deduplicação — usado por otimizadores de jogos)
+    public static uint CombinePhysicalMemory() {
+        int dummy = 0;
+        GCHandle h = GCHandle.Alloc(dummy, GCHandleType.Pinned);
+        try   { return NtSetSystemInformation(0x60, h.AddrOfPinnedObject(), sizeof(int)); }
         finally { h.Free(); }
     }
 }
@@ -414,25 +456,31 @@ public class NativeRamTools {
 
     try {
         [System.GC]::Collect()
-        $ramBefore = (Get-CimInstance -ClassName Win32_OperatingSystem).FreePhysicalMemory * 1024
+        $ramBefore = [NativeRamTools]::GetAvailablePhysicalMemory()
 
-        Write-Log 'Comprimindo Working Sets (processos)' 'i'
         $counts = [NativeRamTools]::EmptyAllWorkingSets()
-        Write-Log "Processos otimizados: $($counts[0]) | protegidos: $($counts[1])" 'i'
+        Write-Log "Working sets (user-mode): $($counts[0]) processos | $($counts[1]) protegidos" 'i'
 
-        $r = [NativeRamTools]::EmptyWorkingSetsKernel()
-        if ($r -ne 0 -and $r -ne [uint32]::MaxValue) {
-            Write-Log "Aviso Kernel WS: 0x$($r.ToString('X'))" 'w'
-        }
+        $r = [NativeRamTools]::EmptyKernelWorkingSets()
+        if ($r -eq 0) { Write-Log 'Working sets (kernel) esvaziados' 'i' }
 
-        $r = [NativeRamTools]::ClearFileSystemCache()
-        if ($r -eq 0) { Write-Log 'File System Cache invalidado' 'i' }
+        $r = [NativeRamTools]::FlushModifiedList()
+        if ($r -eq 0) { Write-Log 'Modified list transferida para pagefile' 'i' }
 
         $r = [NativeRamTools]::PurgeStandbyList()
-        if ($r -eq 0) { Write-Log 'Standby List purgada' 'i' }
+        if ($r -eq 0) { Write-Log 'Standby list purgada (completa)' 'i' }
 
-        Start-Sleep -Milliseconds 500
-        $ramAfter = (Get-CimInstance -ClassName Win32_OperatingSystem).FreePhysicalMemory * 1024
+        $r = [NativeRamTools]::PurgeLowPriorityStandbyList()
+        if ($r -eq 0) { Write-Log 'Standby list purgada (baixa prioridade)' 'i' }
+
+        $r = [NativeRamTools]::ClearFileSystemCache()
+        if ($r -eq 0) { Write-Log 'File system cache invalidado' 'i' }
+
+        $r = [NativeRamTools]::CombinePhysicalMemory()
+        if ($r -eq 0) { Write-Log 'Páginas físicas combinadas (dedup)' 'i' }
+
+        Start-Sleep -Milliseconds 800
+        $ramAfter = [NativeRamTools]::GetAvailablePhysicalMemory()
 
         $result.TotalFreedBytes = [Math]::Max(0, $ramAfter - $ramBefore)
         $result.Executed = $true
