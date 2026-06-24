@@ -160,6 +160,10 @@ function Invoke-SystemCleanup {
     $win      = $env:SYSTEMROOT
     $temp     = $env:TEMP
 
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU" -Name * -ErrorAction SilentlyContinue
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\WordWheelQuery" -Name * -ErrorAction SilentlyContinue
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths" -Name * -ErrorAction SilentlyContinue
+
     $targets = @()
 
     $electronApps = @(
@@ -609,5 +613,6 @@ if ($isAdmin) {
 $totalDisk = $sys.TotalFreedBytes + $brw.TotalFreedBytes
 $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds, 2)
 Write-Log "Disco liberado: $(Format-Size -Bytes $totalDisk)" 'o'
+Write-Log "RAM liberada: $(Format-Size -Bytes $ramFreed)" 'o'
 Write-Log "Tempo total: ${elapsed}s" 'i'
 Write-Log '===== full.ps1 finalizado =====' 'i'
