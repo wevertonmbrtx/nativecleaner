@@ -3,10 +3,10 @@
 # Log: %TEMP%\ncf.log
 
 $ErrorActionPreference = 'SilentlyContinue'
-$ProgressPreference    = 'SilentlyContinue'
+$ProgressPreference = 'SilentlyContinue'
 
 $script:SourceUrl = 'https://raw.githubusercontent.com/wevertonmbrtx/nativecleaner/refs/heads/main/irm/full.ps1'
-$script:LogFile   = "$env:TEMP\ncf.log"
+$script:LogFile = "$env:TEMP\ncf.log"
 
 # ===== INFRA COMPARTILHADA =====
 
@@ -38,8 +38,8 @@ function Format-Size {
     param([double]$Bytes)
     if ($Bytes -ge 1GB) { return ('{0:N2} GB' -f ($Bytes / 1GB)) }
     elseif ($Bytes -ge 1MB) { return ('{0:N2} MB' -f ($Bytes / 1MB)) }
-    elseif ($Bytes -gt 0)  { return ('{0:N2} KB' -f ($Bytes / 1KB)) }
-    else                   { return '0 Bytes' }
+    elseif ($Bytes -gt 0) { return ('{0:N2} KB' -f ($Bytes / 1KB)) }
+    else { return '0 Bytes' }
 }
 
 function Invoke-SelfElevation {
@@ -55,9 +55,9 @@ function Invoke-SelfElevation {
         Set-Content -LiteralPath $tempScript -Value $content -Encoding UTF8 -Force
 
         $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName        = 'powershell.exe'
-        $psi.Arguments       = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$tempScript`""
-        $psi.Verb            = 'runas'
+        $psi.FileName = 'powershell.exe'
+        $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$tempScript`""
+        $psi.Verb = 'runas'
         $psi.UseShellExecute = $true
 
         $proc = [System.Diagnostics.Process]::Start($psi)
@@ -153,12 +153,12 @@ function Invoke-SystemCleanup {
     $result = [PSCustomObject]@{ TotalFreedBytes = 0; ItemsCleaned = 0; ItemsFailed = 0 }
     $isAdmin = Get-IsAdmin
 
-    $roaming  = $env:APPDATA
-    $local    = $env:LOCALAPPDATA
+    $roaming = $env:APPDATA
+    $local = $env:LOCALAPPDATA
     $localLow = "$env:USERPROFILE\AppData\LocalLow"
-    $sysd     = $env:SYSTEMDRIVE
-    $win      = $env:SYSTEMROOT
-    $temp     = $env:TEMP
+    $sysd = $env:SYSTEMDRIVE
+    $win = $env:SYSTEMROOT
+    $temp = $env:TEMP
 
     Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU" -Name * -ErrorAction SilentlyContinue
     Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\WordWheelQuery" -Name * -ErrorAction SilentlyContinue
@@ -168,9 +168,9 @@ function Invoke-SystemCleanup {
 
     $electronApps = @(
         @{ Name = 'Discord'; Path = "$roaming\discord" },
-        @{ Name = 'VSCode';  Path = "$roaming\Code" },
-        @{ Name = 'Teams';   Path = "$roaming\Microsoft\Teams" },
-        @{ Name = 'Blitz';   Path = "$roaming\Blitz" }
+        @{ Name = 'VSCode'; Path = "$roaming\Code" },
+        @{ Name = 'Teams'; Path = "$roaming\Microsoft\Teams" },
+        @{ Name = 'Blitz'; Path = "$roaming\Blitz" }
     )
     $electronFolders = @('Cache', 'Code Cache', 'GPUCache', 'gpu_logs', 'DawnGraphiteCache', 'DawnWebGPUCache')
     foreach ($app in $electronApps) {
@@ -188,7 +188,7 @@ function Invoke-SystemCleanup {
             $targets += [PSCustomObject]@{ Path = "$sysd\$p"; Name = "Windows $p" }
         }
         $targets += [PSCustomObject]@{ Path = "$win\Prefetch"; Name = 'Windows Prefetch' }
-        $targets += [PSCustomObject]@{ Path = "$win\Temp";    Name = 'Windows Temp' }
+        $targets += [PSCustomObject]@{ Path = "$win\Temp"; Name = 'Windows Temp' }
     }
 
     $msPaths = @('GraphicsCache', 'FontCache', 'IdentityCache', 'Package Cache',
@@ -241,13 +241,13 @@ function Invoke-BrowserCleanup {
     $result = [PSCustomObject]@{ TotalFreedBytes = 0; BrowsersCleaned = 0 }
 
     $browserConfig = @(
-        @{ Name = 'Google Chrome';  Path = "$env:LOCALAPPDATA\Google\Chrome\User Data";               Type = 'chromium'; Targets = @('Cache', 'Code Cache', 'GPUCache', 'ShaderCache', 'Service Worker', 'CacheStorage') },
-        @{ Name = 'Microsoft Edge'; Path = "$env:LOCALAPPDATA\Microsoft\Edge\User Data";              Type = 'chromium'; Targets = @('Cache', 'Code Cache', 'GPUCache', 'ShaderCache', 'Service Worker', 'CacheStorage') },
-        @{ Name = 'Edge WebView';   Path = "$env:LOCALAPPDATA\Microsoft\EdgeWebView\User Data";       Type = 'chromium'; Targets = @('Cache', 'Code Cache', 'GPUCache', 'ShaderCache') },
-        @{ Name = 'Brave';          Path = "$env:LOCALAPPDATA\BraveSoftware\Brave-Browser\User Data"; Type = 'chromium'; Targets = @('Cache', 'Code Cache', 'GPUCache', 'ShaderCache') },
-        @{ Name = 'Opera GX';       Path = "$env:LOCALAPPDATA\Opera Software\Opera GX Stable";        Type = 'opera';    Targets = @('Cache', 'System Cache', 'GPUCache', 'ShaderCache') },
-        @{ Name = 'Opera Stable';   Path = "$env:LOCALAPPDATA\Opera Software\Opera Stable";           Type = 'opera';    Targets = @('Cache', 'System Cache', 'GPUCache', 'ShaderCache') },
-        @{ Name = 'Firefox';        Path = "$env:LOCALAPPDATA\Mozilla\Firefox\Profiles";              Type = 'firefox';  Targets = @('cache2', 'startupCache', 'thumbnails', 'jumpListCache') }
+        @{ Name = 'Google Chrome'; Path = "$env:LOCALAPPDATA\Google\Chrome\User Data"; Type = 'chromium'; Targets = @('Cache', 'Code Cache', 'GPUCache', 'ShaderCache', 'Service Worker', 'CacheStorage') },
+        @{ Name = 'Microsoft Edge'; Path = "$env:LOCALAPPDATA\Microsoft\Edge\User Data"; Type = 'chromium'; Targets = @('Cache', 'Code Cache', 'GPUCache', 'ShaderCache', 'Service Worker', 'CacheStorage') },
+        @{ Name = 'Edge WebView'; Path = "$env:LOCALAPPDATA\Microsoft\EdgeWebView\User Data"; Type = 'chromium'; Targets = @('Cache', 'Code Cache', 'GPUCache', 'ShaderCache') },
+        @{ Name = 'Brave'; Path = "$env:LOCALAPPDATA\BraveSoftware\Brave-Browser\User Data"; Type = 'chromium'; Targets = @('Cache', 'Code Cache', 'GPUCache', 'ShaderCache') },
+        @{ Name = 'Opera GX'; Path = "$env:LOCALAPPDATA\Opera Software\Opera GX Stable"; Type = 'opera'; Targets = @('Cache', 'System Cache', 'GPUCache', 'ShaderCache') },
+        @{ Name = 'Opera Stable'; Path = "$env:LOCALAPPDATA\Opera Software\Opera Stable"; Type = 'opera'; Targets = @('Cache', 'System Cache', 'GPUCache', 'ShaderCache') },
+        @{ Name = 'Firefox'; Path = "$env:LOCALAPPDATA\Mozilla\Firefox\Profiles"; Type = 'firefox'; Targets = @('cache2', 'startupCache', 'thumbnails', 'jumpListCache') }
     )
 
     foreach ($b in $browserConfig) {
@@ -512,8 +512,8 @@ public class NativeRamTools {
 
         $result.TotalFreedBytes = [Math]::Max(0, $ramAfter - $ramBefore)
         $result.Executed = $true
-        $result.Success  = $true
-        $result.Message  = "RAM recuperada: $(Format-Size -Bytes $result.TotalFreedBytes)"
+        $result.Success = $true
+        $result.Message = "RAM recuperada: $(Format-Size -Bytes $result.TotalFreedBytes)"
         Write-Log $result.Message 'o'
     } catch {
         $result.ErrorOccurred = $true
@@ -554,11 +554,11 @@ function Invoke-RamMapCleanup {
 
         foreach ($flag in '-Ew', '-Es', '-Et') {
             $psi = New-Object System.Diagnostics.ProcessStartInfo
-            $psi.FileName        = $tempPath
-            $psi.Arguments       = "$flag -AcceptEula"
-            $psi.WindowStyle     = 'Hidden'
+            $psi.FileName = $tempPath
+            $psi.Arguments = "$flag -AcceptEula"
+            $psi.WindowStyle = 'Hidden'
             $psi.UseShellExecute = $true
-            $psi.Verb            = 'runas'
+            $psi.Verb = 'runas'
             $p = [System.Diagnostics.Process]::Start($psi)
             $p.WaitForExit()
         }
@@ -568,8 +568,8 @@ function Invoke-RamMapCleanup {
 
         $result.TotalFreedBytes = [Math]::Max(0, $ramAfter - $ramBefore)
         $result.Executed = $true
-        $result.Success  = $true
-        $result.Message  = "RAMMap recuperou: $(Format-Size -Bytes $result.TotalFreedBytes)"
+        $result.Success = $true
+        $result.Message = "RAMMap recuperou: $(Format-Size -Bytes $result.TotalFreedBytes)"
         Write-Log $result.Message 'o'
     } catch {
         $result.ErrorOccurred = $true
